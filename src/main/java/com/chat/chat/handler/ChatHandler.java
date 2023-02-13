@@ -1,5 +1,7 @@
 package com.chat.chat.handler;
 
+import com.chat.chat.dto.ChatDTO;
+import com.chat.chat.dto.ChatListDTO;
 import com.chat.chat.service.ParserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -12,8 +14,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -29,6 +31,8 @@ public class ChatHandler extends TextWebSocketHandler {
     @Autowired
     private final ParserService parserService;
 
+
+
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) {
         //메시지 발송
@@ -37,6 +41,18 @@ public class ChatHandler extends TextWebSocketHandler {
         log.info("ChatHandler handleTextMessage message : "+message);
         log.info("ChatHandler handleTextMessage msg : "+msg);
         log.info("ChatHandler handleTextMessage obj : "+obj);
+
+        LocalDateTime ldt = LocalDateTime.now();
+        ChatDTO chatDTO = ChatDTO.builder()
+                    .type(obj.get("type").toString())
+                    .message(obj.get("msg").toString())
+                    .userName(obj.get("userName").toString())
+                    .regDate(ldt)
+                    .build();
+
+        ChatListDTO.getInstance().chatMapLog(Integer.parseInt(obj.get("roomNumber").toString()),chatDTO);
+
+
         String rN = (String) obj.get("roomNumber");
         HashMap<String, Object> temp = new HashMap<String, Object>();
         if(rls.size() > 0) {
@@ -102,6 +118,16 @@ public class ChatHandler extends TextWebSocketHandler {
         obj.put("type", "getId");
         obj.put("sessionId", session.getId());
         session.sendMessage(new TextMessage(obj.toJSONString()));
+
+        // 방에 그간 채팅 내역을 보낸다.
+        ArrayList<ChatDTO> list = ChatListDTO.getInstance().getLog(Integer.parseInt(roomNumber));
+        for (ChatDTO arr : list){
+            JSONObject objArray = new JSONObject();
+            objArray.put("type",arr.getType());
+            objArray.put("msg",arr.getMessage());
+            objArray.put("userName",arr.getUserName());
+            session.sendMessage(new TextMessage(objArray.toJSONString()));
+        }
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.chat.chat.controller;
 
+import com.chat.chat.dto.ChatDTO;
 import com.chat.chat.dto.RoomDTO;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,8 @@ public class WebSocketController {
 
     // 서버에 있는 roomNumber and name List
     private List<RoomDTO> roomList = new ArrayList<>();
+
+
 
     @RequestMapping("/chat")
     public ModelAndView chat() {

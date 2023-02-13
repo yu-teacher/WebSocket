@@ -93,6 +93,7 @@
 		socketCreateRoom.onopen = function (data) {
 			//소켓이 열리면 동작
 			console.log('열려부럿따.');
+			console.log(data);
 
 			socketCreateRoom.onmessage = function (data) {
 				getRoom();

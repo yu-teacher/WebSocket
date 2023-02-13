@@ -99,8 +99,9 @@
 					}
 
 				} else if (d.type == "intro") {
-					console.warn("unknown type!")
 					$("#chating").append("<p class='user_status'>" + d.msg + "</p>");
+				} else{
+					console.warn("unknown type!");
 				}
 			}
 		}
