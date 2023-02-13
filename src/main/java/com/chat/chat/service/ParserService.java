@@ -1,11 +1,13 @@
-package com.chat.chat.staticElement;
+package com.chat.chat.service;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.stereotype.Service;
 
-public class Parser {
-    public static JSONObject jsonToObjectParser(String jsonStr) {
+public interface ParserService {
+
+    default JSONObject jsonToObjectParser(String jsonStr) {
         JSONParser parser = new JSONParser();
         JSONObject obj = null;
         try {
@@ -15,6 +17,4 @@ public class Parser {
         }
         return obj;
     }
-
-
 }

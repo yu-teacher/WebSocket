@@ -98,8 +98,8 @@
 				getRoom();
 			}
 
-			socketCreateRoom.onerror = function(data){
-				console.log(data);
+			socketCreateRoom.onclose = function (data) {
+
 			}
 		}
 	});
@@ -122,17 +122,6 @@
 		$("#createRoom").click(function () {
 			var msg = { roomName: $('#roomName').val() };
 
-			// commonAjax('/getRoom', "", 'post', function (result) {
-			// 	result.forEach(function (RN) {
-			// 		if (RN.roomName == msg.roomName) {
-			// 			alert('같은 이름의 방이 존재합니다! 다른 이름으로 부탁드립니다.');
-			// 			$("#roomName").val("");
-			// 			$("#roomName").focus();
-			// 			return;
-			// 		}
-			// 	});
-			// });
-
 			commonAjax('/createRoom', msg, 'post', function (result) {
 				createChatingRoom(result);
 			});
@@ -149,19 +138,37 @@
 
 	function createChatingRoom(res) {
 		if (res != null) {
-			var tag = "<tr><th class='num'>순서</th><th class='room'>방 이름</th><th class='go'></th></tr>";
+			var tag = "<tr><th class='num'>순서</th><th class='room'>방 이름</th><th class='go'></th><th class='go'></th></tr>";
 			res.forEach(function (d, idx) {
 				var rn = d.roomName.trim();
 				var roomNumber = d.roomNumber;
-				tag += "<tr>" +
+				tag += "<tr class='thisRoom" + rn + "'>" +
+					"<input class='roomNumValue' type='hidden' value='" + roomNumber + "' >" +
+					"<input class='roomNameValue' type='hidden' value='" + rn + "' >" +
 					"<td class='num'>" + (idx + 1) + "</td>" +
 					"<td class='room'>" + rn + "</td>" +
 					"<td class='go'><button type='button' onclick='goRoom(\"" + roomNumber + "\", \"" + rn + "\")'>참여</button></td>" +
+					"<td class='go'><button class='deleteRoom' type='button'>방 삭제</button></td>" +
 					"</tr>";
 			});
 			$("#roomList").empty().append(tag);
 		}
+
+		$('#roomList').off('click', '.deleteRoom').on('click', '.deleteRoom', function () {
+			var roomNum = $(this).closest('tr').find('.roomNumValue').val();
+			var roomNem = $(this).closest('tr').find('.roomNameValue').val();
+			var msg = { 
+				'roomNumber' : roomNum,
+				'roomName': roomNem
+			 };
+			console.log(msg);
+			commonAjax('/deleteRoom', msg, 'post', function (result) {
+				createChatingRoom(result);
+			});
+			send();
+		});
 	}
+
 
 	function commonAjax(url, parameter, type, calbak, contentType) {
 		$.ajax({

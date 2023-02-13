@@ -1,7 +1,10 @@
 package com.chat.chat.handler;
 
+import com.chat.chat.service.ParserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -9,20 +12,28 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
-import static com.chat.chat.staticElement.Parser.jsonToObjectParser;
-import static com.chat.chat.staticElement.StaticValue.rls;
 
 @Component
 @Log4j2
+@RequiredArgsConstructor
 public class ChatHandler extends TextWebSocketHandler {
+
+    //웹소켓 세션을 담아둘 리스트 ---roomListSessions
+    private List<HashMap<String, Object>> rls = new ArrayList<>();
+
+    @Autowired
+    private final ParserService parserService;
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) {
         //메시지 발송
         String msg = message.getPayload();
-        JSONObject obj = jsonToObjectParser(msg);
+        JSONObject obj = parserService.jsonToObjectParser(msg);
         log.info("ChatHandler handleTextMessage message : "+message);
         log.info("ChatHandler handleTextMessage msg : "+msg);
         log.info("ChatHandler handleTextMessage obj : "+obj);
@@ -103,4 +114,8 @@ public class ChatHandler extends TextWebSocketHandler {
         }
         super.afterConnectionClosed(session, status);
     }
+
+
+
+
 }

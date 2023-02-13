@@ -1,45 +1,58 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<meta charset="UTF-8">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<meta charset="UTF-8">
 	<title>Chating</title>
 	<style>
-		*{
-			margin:0;
-			padding:0;
+		* {
+			margin: 0;
+			padding: 0;
 		}
-		.container{
+
+		.container {
 			width: 500px;
 			margin: 0 auto;
 			padding: 25px
 		}
-		.container h1{
+
+		.container h1 {
 			text-align: left;
 			padding: 5px 5px 5px 15px;
 			color: #FFBB00;
 			border-left: 3px solid #FFBB00;
 			margin-bottom: 20px;
 		}
-		.chating{
+
+		.chating {
 			background-color: #000;
 			width: 500px;
 			height: 500px;
 			overflow: auto;
 		}
-		.chating .me{
+
+		.chating .me {
 			color: #F6F6F6;
 			text-align: right;
 		}
-		.chating .others{
+
+		.chating .others {
 			color: #FFE400;
 			text-align: left;
 		}
-		input{
+
+		.chating .user_status {
+			color: #F6F6F6;
+			text-align: center;
+		}
+
+		input {
 			width: 330px;
 			height: 25px;
 		}
-		#yourMsg{
+
+		#yourMsg {
 			display: none;
 		}
 	</style>
@@ -49,89 +62,112 @@
 	/*<![CDATA[*/
 	var ws;
 	var roomNumber = /*[[${roomNumber}]]*/ {};
+	var myName = '유우저 이름';
+	wsOpen();
+	
 
-	function wsOpen(){
+	function wsOpen() {
 		//웹소켓 전송시 현재 방의 번호를 넘겨서 보낸다.
-		ws = new WebSocket("ws://" + location.host + "/chatting/"+roomNumber);
+		ws = new WebSocket("ws://" + location.host + "/chatting/" + roomNumber);
 		wsEvt();
 	}
-		
+
 	function wsEvt() {
-		ws.onopen = function(data){
+		ws.onopen = function (data) {
 			//소켓이 열리면 동작
 			console.log('열려부럿따.');
+			open_and_close_socket(myName + '님이 등판하셨습니다.');
+			// $("#chating").append("<p class='user_status'>" + myName + "님이 등판하셨습니다. </p>");
 		}
-		
-		ws.onmessage = function(data) {
+
+		ws.onmessage = function (data) {
 			//메시지를 받으면 동작
 			var msg = data.data;
 			console.log(msg);
-			if(msg != null && msg.trim() != ''){
+			if (msg != null && msg.trim() != '') {
 				var d = JSON.parse(msg);
-				if(d.type == "getId"){
+				if (d.type == "getId") {
 					var si = d.sessionId != null ? d.sessionId : "";
-					if(si != ''){
-						$("#sessionId").val(si); 
+					if (si != '') {
+						$("#sessionId").val(si);
 					}
-				}else if(d.type == "message"){
-					if(d.sessionId == $("#sessionId").val()){
-						$("#chating").append("<p class='me'>나 :" + d.msg + "</p>");	
-					}else{
+				} else if (d.type == "message") {
+					if (d.sessionId == $("#sessionId").val()) {
+						$("#chating").append("<p class='me'>나 :" + d.msg + "</p>");
+					} else {
 						$("#chating").append("<p class='others'>" + d.userName + " :" + d.msg + "</p>");
 					}
-						
-				}else{
+
+				} else if (d.type == "intro") {
 					console.warn("unknown type!")
+					$("#chating").append("<p class='user_status'>" + d.msg + "</p>");
 				}
 			}
 		}
 
-		document.addEventListener("keypress", function(e){
-			if(e.keyCode == 13){ //enter press
+		document.addEventListener("keypress", function (e) {
+			if (e.keyCode == 13) { //enter press
 				send();
 			}
 		});
 
-		ws.onclose = function(data){
+		ws.onclose = function (data) {
 			//소켓이 닫히면 동작
 			console.log('닫혀부러따');
+			open_and_close_socket(myName + '님이 나가셨습니다.');
+			// $("#chating").append("<p class='user_status'>" + myName + "님이 나가셨습니다. </p>");
 		}
+		window.addEventListener("beforeunload", function () {
+			socket.close();
+		});
 	}
 
-	function chatName(){
+	function chatName() {
 		var userName = $("#userName").val();
-		if(userName == null || userName.trim() == ""){
+		if (userName == null || userName.trim() == "") {
 			alert("사용자 이름을 입력해주세요.");
 			$("#userName").focus();
-		}else{
-			wsOpen();
+		} else {
+			// wsOpen();
 			$("#yourName").hide();
 			$("#yourMsg").show();
 		}
 	}
 
 	function send() {
-		var option ={
+		var option = {
 			type: "message",
 			'roomNumber': roomNumber,
-			sessionId : $("#sessionId").val(),
-			userName : $("#userName").val(),
-			msg : $("#chatting").val()
+			sessionId: $("#sessionId").val(),
+			userName: $("#userName").val(),
+			msg: $("#chatting").val()
 		}
 		ws.send(JSON.stringify(option))
 		$('#chatting').val("");
 	}
+
+	function open_and_close_socket(msg){
+		var message = {
+			'type': "intro",
+			'roomNumber': roomNumber,
+			'sessionId': $("#sessionId").val(),
+			'userName': myName,
+			'msg': msg
+		}
+		ws.send(JSON.stringify(message))
+	}
 	/*]]>*/
 </script>
+
 <body>
 	<div id="container" class="container">
 		<h1>[[${roomName}]] 채팅방</h1>
 		<input type="hidden" id="sessionId" value="">
 		<input type="hidden" id="roomNumber" value="[[${roomNumber}]]">
-		
+
 		<div id="chating" class="chating">
 		</div>
-		
+
 		<div id="yourName">
 			<table class="inputTable">
 				<tr>
@@ -152,4 +188,5 @@
 		</div>
 	</div>
 </body>
+
 </html>
